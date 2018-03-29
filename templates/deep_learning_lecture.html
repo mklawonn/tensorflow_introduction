@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Convolutional Neural Networks: Practical Tips and Applications</title>
+
+		<meta name="description" content="CNNs : Practical Tips and Applications">
+		<meta name="author" content="Matt Klawonn">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/serif.css" id="theme">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+        <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+          tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+        });
+        </script>
+        <script type="text/javascript" async
+          src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+        </script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+		<div class="reveal">
+            <!-- Any section element inside of this container is displayed as a slide -->
+            <div class="slides">
+
+                <section>
+                    <h2>CNNs : Practical Tips and Applications</h2>
+                    <h5>Matt Klawonn</h5>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>CNN Applications</h2>
+                        <ul>
+                            <li><a href="#">Image Recognition</a></li>
+                            <li><a href="#">Video analysis</a></li>
+                            <li><a href="#">Drug Discovery</a></li>
+                            <li><a href="#">Misc Signal Processing</a></li>
+                        <ul>
+                    </section>
+
+                    <section>
+                        <h2>Why use a CNN?</h2>
+                    </section>
+
+                    <section>
+                        <h2>Traditional ML Approach</h2>
+                        <div style="position:relative; width:640px; height:410px; margin:0 auto;">
+                            <img src="images/machine_learning_features.jpg" height="400" style="position:absolute;top:0;left:50%;margin-left:-255px;"/>
+                            <!-- Altered version with boxes outlining that the features are hand crafted -->
+                            <img class="fragment" src="images/ML_Features.png" height="400" style="position:absolute;top:0;left:50%;margin-left:-255px;"/>
+                        </div>
+                        <p><small>Image courtesy of <a href="http://www.slideshare.net/rahuldausa/introduction-to-machine-learning-38791937">here</a></small></p>
+                    </section>
+
+                    <section>
+                        <h2>Deep Learning Approach</h2>
+                        <div style="position:relative; width:640px; height:410px; margin:0 auto;">
+                            <img src="images/deep_learning_learn_features.jpg" height="400" style="position:absolute;top:0;left:50%;margin-left:-305px;"/>
+                            <!-- Altered version with boxes outlining that the features are learned -->
+                            <img class="fragment" src="images/DL_Features.png" height="400" style="position:absolute;top:0;left:50%;margin-left:-305px;"/>
+                        </div>
+                        <p><small>Image courtesy of <a href="http://www.slideshare.net/roelofp/python-for-image-understanding-deep-learning-with-convolutional-neural-nets">here</a></small></p>
+                    </section>
+
+                    <section>
+                        <h5>What considerations are made when developing a CNN for a particular task?</h5>
+                        <ul>
+                            <li class="fragment">How to design the network (# of layers, filters, filter size).</li>
+                            <li class="fragment">What preprocessing to do on the data.</li>
+                            <li class="fragment">How to regularize and avoid overfitting.</li>
+                            <li class="fragment">How to select hyperparameters.</li>
+                            <li class="fragment">How to implement the chosen network.</li>
+                        </ul>
+                    </section>
+                </section>
+
+                <!-- Introduction slide and outline -->
+                <section>
+                    <h2>Lecture Overview</h2>
+                    <ul>
+                        <li>Network Design Considerations</li>
+                        <li>Data Tips</li>
+                        <li>Regularization Techniques</li>
+                        <li>Hyperparameters</li>
+                        <li>Implementation Advice</li>
+                        <li>Applications</li>
+                    </ul>
+                </section>
+
+                <!-- Network Design Considerations -->
+                <section>
+                    <section>
+                        <h2>Overview</h2>
+                        <ul style="color:#d3d3d3">
+                            <li style="color:#333">Network Design Considerations</li>
+                            <li>Data Tips</li>
+                            <li>Regularization Techniques</li>
+                            <li>Hyperparameters</li>
+                            <li>Implementation Advice</li>
+                            <li>Applications</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Recall Convolutional Layers</h2>
+                        <p>Convolutional layers compute feature maps via the following equation $$C(r,c) = I*W(r,c) = \sum_{i=1}^{K} \sum_{j=1}^{K} I(r+i-1,c+j-1)W(i,j)$$ where C(r,c) is a feature map, I is an image, W is a matrix filter, and (r,c) refers to a pixel location in the image I.</p>
+                    </section>
+
+                    <section>
+                        <iframe src="https://cs231n.github.io/assets/conv-demo/index.html" width="100%" height="700px;" style="border:none;"></iframe>
+                        <p><small>Animation courtesy of <a href="https://cs231n.github.io/assets/conv-demo/index.html">here</a></small></p>
+                        <aside class="notes">Here we can see the filter being performed across windows of the image. These are aggregated into feature maps, which represent various features automatically extracted from the image. One reason CNNs are so successful is that these filters are learned and tuned for the task at hand, which corresponds to learning good features for the problem.</aside>
+                    </section>
+
+                    <section>
+                        <h2>Filters Correspond to Learned Features</h2>
+                        <div style="position:relative; width:640px; height:410px; margin:0 auto;">
+                            <img src="images/deep_learning_learn_features.jpg" height="400" style="position:absolute;top:0;left:50%;margin-left:-305px;"/>
+                            <!-- Altered version with boxes outlining that the features are learned -->
+                            <img class="fragment" src="images/DL_Features.png" height="400" style="position:absolute;top:0;left:50%;margin-left:-305px;"/>
+                        </div>
+                        <p><small>Image courtesy of <a href="http://www.slideshare.net/roelofp/python-for-image-understanding-deep-learning-with-convolutional-neural-nets">here</a></small></p>
+                    </section>
+
+                    <!-- Depth of Network -->
+                    <section>
+                        <h2>Selecting Network Depth</h2>
+                        <p>Network depth will be affected by the parameters of convolutional layers and pooling layers. Once enough filters have been applied, i.e enough features have been generated, the features are fed into a classifier (fully connected layers).</p>
+                        <img src="images/CNN_pyramid_large.jpg" class="fragment"/>
+                    </section>
+                    <!-- Selecting Filters -->
+                    <section>
+                        <h2>Number of Filters</h2>
+                        <p>The number of filters generally increases as you go further into the network. This is because early filters are computing basic features. There are only so many edge detectors that are useful.</p>
+                    </section>
+                    <section>
+                        <h2>Fully Connected Classifier</h2>
+                        <p>This is typically a few "normal" (fully connected) neural network layers, though people have used SVMs and other classification algorithms with the convolutional features as inputs.</p>
+                    </section>
+                    <!-- What have people done before? -->
+                    <section>
+                        <h2>Existing Models</h2>
+                        <p>Deep learning tends to be a field which adopts practices "because they work." Try out choices with which previous models have had success.</p>
+                    </section>
+                </section>
+
+                <!-- Data tips -->
+                <section>
+                    <section>
+                        <h2>Overview</h2>
+                        <ul style="color:#d3d3d3">
+                            <li>Network Design Considerations</li>
+                            <li style="color:#333">Data Tips</li>
+                            <li>Regularization Techniques</li>
+                            <li>Hyperparameters</li>
+                            <li>Implementation Advice</li>
+                            <li>Applications</li>
+                        </ul>
+                    </section>
+                    <!-- Data Augmentation -->
+                    <section>
+                        <h2>Data Augmentation</h2>
+                        <p>Deep models require lots of data.</p>
+                        <p><img src="images/augmentation.svg" height=400px /></p>
+                        <p><small>Example of generating image for data augmentation. Image courtesy of <a href="https://matthewearl.github.io/2016/05/06/cnn-anpr/">here</a></small></p>
+                    </section>
+                    <section>
+                        <h2>More Data Augmentation</h2>
+                        <ul>
+                            <li>Random Cropping</li>
+                            <li>Horizontally Flipping</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Data Imbalances</h2>
+                        <p>Data imbalances can have negative impacts on training <a href="https://www.kth.se/social/files/588617ebf2765401cfcc478c/PHensmanDMasko_dkand15.pdf">(see here.)</a> <span class="fragment">One can solve this by cutting down on the number of more abundant classes, artificially enhancing the number of less abundant classes, or first training on abundant classes and then finetuning on rarer ones.</span></p>
+                    </section>
+                    <!-- Preprocessing -->
+                    <!-- Zero Centering and Normalization -->
+                    <section>
+                        <h2>Normalization</h2>
+                        <p>In previous assignments, dividing MNIST images by 255 has yielded normalized data. Normalized data is nicer for optimization.</p>
+                        <img src="images/data_normalization.png"/>
+                        <p><small>Image courtesy of <a href="http://stats.stackexchange.com/questions/111467/is-it-necessary-to-scale-the-target-value-in-addition-to-scaling-features-for-re">here</a></small></p>
+                    </section>
+                    <section>
+                        <h2>Zero Centering and Normalization</h2>
+                        <p>The most common type of preprocessing is to compute a mean over the training data, and subtract this mean from each data point to zero center the data. Normalization is then performed on the centered data. This is done to give lower importance to inputs which are "average" as they will be near zero.</p>
+                    </section>
+                </section>
+
+                <!-- Regularization Techniques -->
+                <section>
+                    <section>
+                        <h2>Overview</h2>
+                        <ul style="color:#d3d3d3">
+                            <li>Network Design Considerations</li>
+                            <li>Data Tips</li>
+                            <li style="color:#333">Regularization Techniques</li>
+                            <li>Hyperparameters</li>
+                            <li>Implementation Advice</li>
+                            <li>Applications</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Regularization Helps with Overfitting</h2>
+                        <img src="images/Regularization.png" />
+                        <p><small>Image courtesy of <a href="https://en.wikipedia.org/wiki/Regularization_(mathematics)">here</a></small></p>
+                    </section>
+                    <section>
+                        <h2>L1 and L2 Regularization</h2>
+                        <img src="images/l1_and_l2_regularization.png" />
+                    </section>
+                    <section>
+                        <h2>Max Norm Constraints</h2>
+                        <p>Enforce an absolute upper bound on weights going from one neuron to another.</p>
+                        <h4>$W^L_{ij} \leq c$</h4>
+                    </section>
+                    <section>
+                        <h2>Max Norm in TensorFlow</h2>
+                        <code><pre>
+optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+grads = optimizer.compute_gradients(loss, [w1, w2, ...])
+#Grads is a list of tuples (gradient, associated_variable)
+capped = 
+[(tf.clip_by_norm(grad_tuple[0], clip_norm=1.0, axes=0), grad_tuple[1])
+                for grad_tuple in grads]
+optimizer = optimizer.apply_gradients(capped)
+                        </pre></code>
+                    </section>
+                    <section>
+                        <h2>Early Stopping</h2>
+                        <p>Stop when validation loss stops decreasing.</p>
+                        <p><img src="images/earlystopping.jpg" height=400px /></p>
+                        <p><small>Early stopping illustration. Image courtesy of <a href="https://visualstudiomagazine.com/articles/2015/05/01/train-validate-test-stopping.aspx">here</a></small></p>
+                    </section>
+                    <section>
+                        <h2>Early Stopping in TensorFlow</h2>
+                        <code><pre>
+with tf.Session() as sess:
+    for _ in xrange(max_iterations):
+        sess.run(training_op)
+        val_loss = sess.run(loss, feed_dict = 
+                    {data_placeholder : validation_data, 
+                    label_placeholder : validation_labels})
+        if val_loss > last_val_loss:
+            counter += 1
+        if counter == early_stop_threshold:
+            break
+        last_val_loss = val_loss
+                        </pre></code>
+                    </section>
+                    <section>
+                        <h2>Dropout</h2>
+                        <p><img src="images/dropout1.png" /></p>
+                        <p><small>Dropout illustration. Image courtesy of <a href="http://everglory99.github.io/Intro_DL_TCC/#/">here</a></small></p>
+                    </section>
+                    <section>
+                        <h2>Dropout in TensorFlow</h2>
+                        <code><pre>
+#x is the input (i.e a layer's activation)
+#keep_prob is the probability that each entry in the input is not set
+#to zero
+d = tf.nn.dropout(x, keep_prob, noise_shape=None, seed=None, name=None)
+#Pass d along to the next layer
+                        </pre></code>
+                    </section>
+<!--
+                    <section>
+                        <h2>Batch Normalization</h2>
+                        <p>Due to the depth of modern convolutional neural networks, internal covariate shifts may occur. <span class="fragment">Batch normalization proposes to normalize batches by the mean and variance of <b>that batch.</b></span></p>
+                    </section>
+                    <section>
+                        <h2>Batch Normalization Equations</h2>
+                        <img src="images/batch_normalization_transform.png"/>
+                        <p><small>Image courtesy of <a href="https://gab41.lab41.org/batch-normalization-what-the-hey-d480039a9e3b#.8f3jwnpp1">here</a></small></p>
+                    </section>
+                    <section>
+                        <h2>Batch Normalization Equations Cont.</h2>
+                        <img src="images/batch_normalization_training.png"/>
+                        <p><small>Image courtesy of <a href="https://gab41.lab41.org/batch-normalization-what-the-hey-d480039a9e3b#.8f3jwnpp1">here</a></small></p>
+                    </section>
+                    <section>
+                        <h2>Batch Normalization in TensorFlow</h2>
+                        <code><pre>
+#Define a layer as you normally would pre-activation 
+h1 = tf.add(tf.matmul(w, input), b)
+#Now normalize this output according to mini-batch statistics
+h1_normalized = tf.contrib.layers.batch_norm(h1,
+                    center=True, scale=True,
+                    is_training=True)
+#Proceed to apply activation function and pass along
+h1_activated = tf.nn.relu(h1_normalized)
+                        </pre></code>
+                    </section> -->
+                    <!-- Transfer Learning -->
+                    <!-- Mention something about hierarchy of features -->
+                    <section>
+                        <h2>Transfer Learning</h2>
+                        <p>Many times it is unnecessary to train a CNN from scratch! <span class="fragment">Models which have been trained on large image classification tasks are often a good starting point for other image recognition tasks.</span></p>
+                    </section>
+                    <section>
+                        <h2>Feature Hierarchy and Transfer Learning</h2>
+                        <p>When finetuning a pre-trained network to a new task, consider how similar the tasks are.</p>
+                        <div style="position:relative; width:640px; height:410px; margin:0 auto;">
+                            <img src="images/deep_learning_learn_features.jpg" height="400" style="position:absolute;top:0;left:50%;margin-left:-305px;"/>
+                            <!-- Altered version with boxes outlining that the features are learned -->
+                            <img class="fragment" src="images/DL_Features.png" height="400" style="position:absolute;top:0;left:50%;margin-left:-305px;"/>
+                        </div>
+                        <p><small>Image courtesy of <a href="http://www.slideshare.net/roelofp/python-for-image-understanding-deep-learning-with-convolutional-neural-nets">here</a></small></p>
+                    </section>
+                </section>
+
+
+
+                <!-- Hyperparameter Recommendations -->
+                <section>
+                    <section>
+                        <h2>Overview</h2>
+                        <ul style="color:#d3d3d3">
+                            <li>Network Design Considerations</li>
+                            <li>Data Tips</li>
+                            <li>Regularization Techniques</li>
+                            <li style="color:#333">Hyperparameters</li>
+                            <li>Implementation Advice</li>
+                            <li>Applications</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Validation Data</h2>
+                        <p>Validation data can be used to select hyperparameters in a rigorous way. <span class="fragment">A common practice is to set aside 10% of the training data for use as validation data.</span></p>
+                    </section>
+                    <!-- Activation Function Choices -->
+                    <section>
+                        <h2>Activation Function Choices</h2>
+                        <p>Recall the purpose of an activation function is to introduce a non-linear transform into the learning algorithm.</p>
+                    </section>
+                    <section>
+                        <h2>Motivations of ReLUs</h2>
+                        <p>ReLUs avoid the saturation problem of sigmoids.</p>
+                        <img src="images/sigmoid_saturation.png" />
+                        <p><small>Image courtesy of <a href="https://medium.com/@karpathy/yes-you-should-understand-backprop-e2f06eab496b#.14w0uzuif">here</a></small></p>
+                    </section>
+                    <section>
+                        <h2>Motivations of Leaky ReLU and Variants</h2>
+                        <p>Leaky ReLUs avoid "dead neurons" which can occur when using ReLU.</p>
+                        <img src="images/relu_and_gradient.png" />
+                        <p><small>Image courtesy of <a href="https://medium.com/@karpathy/yes-you-should-understand-backprop-e2f06eab496b#.14w0uzuif">here</a></small></p>
+                    </section>
+                    <!-- Initializations -->
+                    <section>
+                        <h2>Initialization Choices</h2>
+                        <p>Initialzation matters due to non-convexity of deep models. The choice is motivated by activation function choice and network depth. A basic strategy is to use small random weights, with the randomness helping to break symmetry, e.g W ~ 0.001 x N(0, 1).</p>
+                    </section>
+                    <section>
+                        <h2>Xavier (Glorot) Initialization</h2>
+                        <p>One problem with simple small random initialization is that the variance of a neuron's output grows with its fan-in. <span class="fragment">Xavier initialization proposes to normalize the variance of the output of each neuron in a layer to 1.</span> <span class="fragment">This is done by dividing each random weight by the fan-in for that neuron.</span></p>
+                    </section>
+                    <section>
+                        <h2>Xavier Initialization Derivation</h2>
+                        <p>The variable "s" represents a neuron's unactivated output. <span class="fragment">Note that the derivation assumes the weights and inputs have a mean of zero, which is not the case for ReLU activations.</span></p>
+                        <img src="images/xavier_derivation.png" />
+                        <p><small>Image courtesy of <a href="http://cs231n.github.io/neural-networks-2/">here</a></small></p>
+                    </section>
+                    <section>
+                        <h2>He Initialization</h2>
+                        <p>He initialization uses a similar idea (normalizing the variance) which is more appropriate for ReLU activations.<span class="fragment"> <a href="http://arxiv-web3.library.cornell.edu/abs/1502.01852">This paper</a> provides the derivation, but the recommend multiplying each weight by $\sqrt{2/n}$ where "n" is the fan-in.</span></p>
+                    </section>
+                    <section>
+                        <h2>Xavier and He in TensorFlow</h2>
+                        <code><pre>
+W_Xavier = tf.get_variable("W", 
+        shape=[prev_hidden_shape, next_hidden_shape],
+        initializer=tf.contrib.layers.xavier_initializer())
+W_He = tf.get_variable("W", 
+        shape=[prev_hidden_shape, next_hidden_shape],
+        initializer=tf.contrib.layers.variance_scaling_initializer(
+            factor=2.0, mode="FAN_IN"))
+                        </pre></code>
+                    </section>
+                    <!-- Learning Rate -->
+                    <section>
+                        <h2>Learning Rate</h2>
+                        <p>The learning rate is probably the most important hyperparameter to cross-validate. <span class="fragment"> Monitoring the training and validation loss output during training helps to see if the learning rate is appropriate.</span></p>
+                        <img src="images/learningrates.jpeg" />
+                        <p><small>Image courtesy of <a href="http://cs231n.github.io/neural-networks-3/">here</a></small></p>
+                    </section>
+                    <!-- Learning Rate Schedule / Adaptive optimizers -->
+                    <section>
+                        <h2>More Optimization Techniques</h2>
+                        <ul>
+                            <li>Learning Rate Schedule</li>
+                            <li>Momentum</li>
+                            <li>Nesterov Momentum</li>
+                            <li>Adaptive Learning Rate Optimizers</li>
+                        </ul>
+                    </section>
+                    <section>
+                    <h2>Learning Rate Schedule</h2>
+                    <code><pre>
+learning_rate = tf.placeholder(tf.float32, shape=[])
+# ...
+train_step = tf.train.GradientDescentOptimizer(
+    learning_rate=learning_rate).minimize(loss)
+
+sess = tf.Session()
+
+# Feed different values for learning rate to each training step.
+sess.run(train_step, feed_dict={learning_rate: 0.1})
+sess.run(train_step, feed_dict={learning_rate: 0.1})
+sess.run(train_step, feed_dict={learning_rate: 0.01})
+sess.run(train_step, feed_dict={learning_rate: 0.01})
+                    </pre></code>
+                    <p><small>Code courtesy of <a href="http://stackoverflow.com/questions/33919948/how-to-set-adaptive-learning-rate-for-gradientdescentoptimizer">Stackoverflow</a></small></p>
+                    </section>
+                    <!-- CNN Specific Hyperparameters -->
+                    <section>
+                        <h2>CNN Specific Parameters</h2>
+                        <ul>
+                            <li>Filter Size</li>
+                            <li>Stride</li>
+                            <li>Padding</li>
+                            <li>Pooling Size</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Filter Size</h2>
+                        <p>Generally stacks of layers with smaller filters are preferable to one larger filter. <span class="fragment">This is because the stack of smaller filters can compute more powerful features due to the nonlinearities between layers.</span> <span class="fragment">The smaller filters also require fewer parameters.</span><span class="fragment"> A 3x3 filter size is commonly used, and the number of filters usually increases with each layer.</span></p>
+                    </section>
+                    <section>
+                        <h2>Stride</h2>
+                        <p>Small strides allow filters to be applied across more patches of an image. A stride size of 1 or 2 is common. <span class="fragment">Note that the filter size and image size limits the stride size.</span></p>
+                    </section>
+                    <section>
+                        <h2>Padding</h2>
+                        <p>Padding allows filters to be applied to edges of the input. 1 or 2 are common choices. Bigger filters mean more padding may be necessary.</p>
+                    </section>
+                    <section>
+                        <h2>Convolutional Layer Output Volume</h2>
+                        <p>Filter size, stride size, and amount of padding all contribute to the output volume dimensions. They must work out such that each output dimension is an integer. <span class="fragment">In the following formulae, assume square inputs and square filters. Let the filter be FxF, the number of filters be K, the stride be S, and padding be P.</span></p>
+                        <ul>
+                            <li class="fragment">W_2 = H_2 = (W_1 - F + 2P)/S + 1</li>
+                            <li class="fragment">D_2 = K</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Pooling Size</h2>
+                        <p>Pooling layers are determined by their receptive field size and stride. <span class="fragment">In practice two combinations are used, one with a field size of 3x3 and stride of 2, another with a field size of 2x2 and stride of 2.</span> <span class="fragment">Larger receptive fields than 3x3 tend to downsample too aggressively.</span></p>
+                        <img src="images/max_pooling_large.png" />
+                    </section>
+                </section>
+
+                <!-- Implementation Advice -->
+                <section>
+                    <section>
+                        <h2>Overview</h2>
+                        <ul style="color:#d3d3d3">
+                            <li>Network Design Considerations</li>
+                            <li>Data Tips</li>
+                            <li>Regularization Techniques</li>
+                            <li>Hyperparameters</li>
+                            <li style="color:#333">Implementation Advice</li>
+                            <li>Applications</li>
+                        </ul>
+                    </section>
+                    <!-- How to implement convolutions with matrix operations -->
+                    <section>
+                        <h2>Implementation of Convolutions</h2>
+                        <p>Consider an input of shape [28, 28, 1], padding size of 1, and a conv layer with 16 filters of shape [3, 3, 1] with a stride of 1. <span class="fragment">The output volume will be of width and height (28 -3 + 2)/1 + 1 = 28.</span></p>
+                        <code class="fragment"><pre>
+filter_size = 3
+num_channels = 1
+num_filters = 16
+W_conv = tf.get_variable("W", 
+        shape=[filter_size,filter_size,num_channels,num_filters],
+        initializer=tf.contrib.layers.variance_scaling_initializer(
+            factor=2.0, mode="FAN_IN"))
+b_conv = tf.Variable(tf.ones([32]))
+conv_out = tf.nn.conv2d(x, W_conv, strides=[1, 1, 1, 1], padding='SAME')
+                        </pre></code>
+                    </section>
+                    <section>
+                        <h2>Same vs Valid Padding in TF</h2>
+                        <img src="images/same_vs_valid.png" />
+                        <p><small>Image courtesy of <a href="http://stackoverflow.com/questions/37674306/what-is-the-difference-between-same-and-valid-padding-in-tf-nn-max-pool-of-t">here</a></small></p>
+                    </section>
+                    <!-- How to do math on a napkin to estimate the memory use of your model -->
+                    <section>
+                        <h2>Approximating Memory Use</h2>
+                        <p>Often deep learning computations are performed on a GPU. The memory of a GPU tends to be the limiting factor (high-end models are about 12GB). <span class="fragment"> To approximate how much memory your model needs, the memory requirements of parameters, activations, and batch data must be considered.</span></p>
+                    </section>
+                    <section>
+                        <h2>Monitor Training with TensorBoard</h2>
+                        <img src="images/mnist_tensorboard.png" />
+                        <p>TensorBoard summary: https://www.tensorflow.org/get_started/summaries_and_tensorboard</p>
+                    </section>
+                </section>
+
+                <!-- Applications -->
+                <section>
+                    <section>
+                        <h2>Overview</h2>
+                        <ul style="color:#d3d3d3">
+                            <li>Network Design Considerations</li>
+                            <li>Data Tips</li>
+                            <li>Regularization Techniques</li>
+                            <li>Hyperparameters</li>
+                            <li>Implementation Advice</li>
+                            <li style="color:#333">Applications</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Image Classification</h2>
+                        <iframe style="height:600px;width:900px" src="http://demo.caffe.berkeleyvision.org/"></iframe>
+                        <p><small><a href="http://demo.caffe.berkeleyvision.org/">Caffe Demo</a></small></p>
+                    </section>
+
+                    <section>
+                        <h2>Visual Question Answering</h2>
+                        <iframe style="height:600px;width:900px" src="http://visualqa.csail.mit.edu/"></iframe>
+                        <p><small><a href="http://visualqa.csail.mit.edu/">MIT Visual Question Answering</a></small></p>
+                    </section>
+
+                    <section>
+                        <h2>Scene Graph Generation</h2>
+                        <img src="images/scene_graph.png" />
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Questions?</h2>
+                        <ul>
+                            <li><a href="#/3">Network Design Considerations</a></li>
+                            <li><a href="#/4">Data Tips</a></li>
+                            <li><a href="#/5">Regularization Techniques</a></li>
+                            <li><a href="#/6">Hyperparameters</a></li>
+                            <li><a href="#/7">Implementation Advice</a></li>
+                            <li><a href="#/8">Applications</a></li>
+                        </ul>
+                    </section>
+                </section>
+            <!-- Slides div -->
+            </div>
+        <!-- Reveal div -->
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'concave', // none/fade/slide/convex/concave/zoom
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>

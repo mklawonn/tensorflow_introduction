@@ -1,0 +1,1044 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Tensorflow Introduction</title>
+
+		<meta name="description" content="Tensorflow Introduction">
+		<meta name="author" content="Matt Klawonn">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/solarized.css" id="theme">
+        <!-- link rel="stylesheet" href="css/print/pdf.css" -->
+        <!-- link rel="stylesheet" href="css/print/paper.css" -- >
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+        <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+          tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+        });
+        </script>
+        <script type="text/javascript" async
+          src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+        </script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+		<div class="reveal">
+            <!-- Any section element inside of this container is displayed as a slide -->
+            <div class="slides">
+
+                <section>
+                    <h2>Tensorflow Introduction</h2>
+                    <h4>By Matt Klawonn</h4>
+                    <h6>klawom@rpi.edu</h6>
+                </section>
+
+                <section>
+                    <h2>Outline</h2>
+                    <ul>
+                        <li>Tensorflow Overview</li>
+                        <li>Data Ingestion</li>
+                        <li>Network Creation</li>
+                        <li>Training, Testing, Troubleshooting</li>
+                        <li>CNNs</li>
+                        <li>RNNs</li>
+                        <li>List of Resources</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Overview</h2>
+                        <ul style="color:#d3d3d3">
+                            <li style="color:#333">Tensorflow Overview</li>
+                            <li>Data Ingestion</li>
+                            <li>Network Creation</li>
+                            <li>Training, Testing, Troubleshooting</li>
+                            <li>CNNs</li>
+                            <li>RNNs</li>
+                            <li>List of Resources</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>What is Tensorflow?</h2>
+                        <p>"TensorFlow is an open source software library for numerical computation using data flow graphs." <span class="fragment">In the context of deep models, it allows you to define networks and then train them via an automatic differentiation algorithm.</span></p>
+                    </section>
+
+                    <section>
+                        <h2>Tensorflow Paradigm</h2>
+                        <p>Tensorflow programming is similar to flow-based programming. You define a complete flow of operations and data first, and execute second.</p>
+                        <img src="images/flow_programming.png" />
+                    </section>
+
+                    <section>
+                        <h2>The Computational Graph</h2>
+                        <p>When writing Tensorflow code, you are constructing a dataflow graph and executing it. <span class="fragment">"Nodes represent units of computation, and edges represent the data consumed or produced by a computation."</span></p>
+                        <img src="images/tensors_flowing.gif"/>
+                    </section>
+
+                    <section>
+                        <h2>Components of Tensorflow Code</h2>
+                        <ul>
+                            <li>Data Ingestion</li>
+                            <li>Trainable Parameters (network weights)</li>
+                            <li>Graph Operations (network structure)</li>
+                            <li>Session Operations (training, testing)</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Consequences of the Graph</h2>
+                        <ul>
+                            <li>The flow of operations is specified ahead of execution</li>
+                            <li class="fragment">There is limited support for control flow operations (if, then, etc)</li>
+                            <li class="fragment">It is expensive to switch back and forth between tensorflow and python</li>
+                            <li class="fragment"><b><u>USE TENSORFLOW FUNCTIONS WHENEVER POSSIBLE!</u></b></li>
+                        </ul>
+                        <aside class="notes">The second one of these isn't really a result of the graph structure, just more a characteristic of tensorflow.</aside>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Overview</h2>
+                        <ul style="color:#d3d3d3">
+                            <li>Tensorflow Overview</li>
+                            <li style="color:#333">Data Ingestion</li>
+                            <li>Network Creation</li>
+                            <li>Training, Testing, Troubleshooting</li>
+                            <li>CNNs</li>
+                            <li>RNNs</li>
+                            <li>List of Resources</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Data Ingestion</h2>
+                        <img src="images/neural_net_input_layer.jpeg" />
+                    </section>
+
+                    <section>
+                        <h2>Main Data Ingestion Methods</h2>
+                        <p>The goal of all of the following methods is to make training data available to your model.</p>
+                        <ul>
+                            <li>Feed Dictionaries</li>
+                            <li>tf.data</li>
+                            <li>Queues (Deprecated)</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Feed Dictionary Motivation</h2>
+                        <p>Tensorflow requires that operations are specified ahead of time. <span class="fragment">This requires that the input data be somehow available to the graph at graph construction, though graph operations must be declared before they are run.</span> <span class="fragment">The <i>placeholder</i> coupled with a <i>feed dictionary</i> allow the graph access to data before the data is actually loaded.</span></p>
+                    </section>
+
+                    <section>
+                        <h2>Feed Dictionary Example</h2>
+                        <pre class="python"><code>
+#The placeholder only specifies what the data will look like, i.e 
+#shape rather than providing specific values
+#When you have an input batch of variable size, setting the batch
+#dimension to None allows you to still use placeholders
+input = tf.placeholder(tf.float32, shape=[None, 784])
+target = tf.placeholder(tf.float32, shape=[None, 10]) 
+
+#Make sure the sizes of trainable parameters are compatible with the
+#sizes specified by the placeholders
+weight_1 = tf.get_variable("weight_1", [input_size, output_size],\
+     initializer = xavier_initializer)
+
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Feed Dictionary Example</h2>
+                        <pre class="python"><code>
+#Specify Operations
+#The placeholders can be used at any point in defining the
+#operations depending on their intended use.
+h1 = tf.matmul(input, weight_1)
+cost = target - h1
+train_operation = optimizer.minimize(cost)
+
+#Code running ops in a session
+with tf.Session() as sess:
+    #This will inialize all trainable parameters
+    sess.run(tf.global_variables_initializer())
+    #Supply actual values that will fill in the placeholder.
+    sess.run(train_operation, \
+        feed_dict = {input : some_vector, target : target_vector})
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>tf.data Motivation</h2>
+                        <p>Feed dictionaries by themselves are slow. Further, they do not provide abstractions for handling complex input pipelines via TF functions (e.g preprocessing).</p>
+                    </section>
+
+                    <section>
+                        <h2>tf.data Structures</h2>
+                        <ul>
+                            <li>Dataset: The heart of the API</li>
+                            <li class="fragment">Elements: Single training examples</li>
+                            <li class="fragment">Components: Parts of a training example</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <pre class="python"><code>
+#Pseudo Code
+
+#Components
+img1
+[1,0,0]
+
+#Element, a training example
+(img1, [1,0,0])
+
+#Dataset, the set of training examples
+dataset_1 = [ (img1, [1,0,0]),
+              (img2, [0,1,0]),
+              (img3, [1,0,0]),
+              (img4, [0,0,1]),
+              (img5, [0,1,0])
+            ]
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Creating a tf.data.Dataset</h2>
+                        <ul>
+                            <li>Create a source</li>
+                            <li>Apply transformations (optional)</li>
+                            <li>Iterate with tf.data.Iterator</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Sourcing a Dataset</h2>
+                        <p>Datasets can be sourced from Tensorflow tensors, Numpy arrays, files on disk, and more.</p>
+                        <pre class="python"><code>
+#Here's an example of sourcing from numpy
+#Only works for small datasets (low hundreds in MB)
+features = np.ones((number_of_examples, 28, 28, 1))
+labels = np.zeros((number_of_examples, number_of_classes))
+
+dataset = tf.data.Dataset.from_tensor_slices((features, labels))
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Sourcing with Placeholders</h2>
+                        <p>Here's an example using placeholders.</p>
+                        <pre class="python"><code>
+features = np.ones((number_of_examples, 28, 28, 1))
+labels = np.zeros((number_of_examples, number_of_classes))
+
+features_placeholder = tf.placeholder(features.dtype, features.shape)
+labels_placeholder = tf.placeholder(labels.dtype, labels.shape)
+
+dataset = tf.data.Dataset.from_tensor_slices((features_placeholder, \
+        labels_placeholder))
+
+#When you run something that needs the dataset, use the placeholders
+sess.run( ... , feed_dict={features_placeholder: features,
+                                          labels_placeholder: labels})
+                        </code></pre>
+
+                    </section>
+
+                    <section>
+                        <h2>Sourcing from Files</h2>
+                        <p>And one from files.</p>
+                        <pre class="python"><code>
+filenames = tf.placeholder(tf.string, shape=[None])
+dataset = tf.data.TFRecordDataset(filenames)
+dataset = dataset.map(...)  # Parse the record into tensors.
+dataset = dataset.repeat()  # Repeat the input indefinitely.
+dataset = dataset.batch(32)
+iterator = dataset.make_initializable_iterator()
+
+# You can feed the initializer with the appropriate filenames for
+# the current phase of execution, e.g. training vs. validation.
+
+# Initialize `iterator` with training data.
+training_filenames = ["/var/data/file1.tfrecord", \
+                "/var/data/file2.tfrecord"]
+sess.run(iterator.initializer, \
+        feed_dict={filenames: training_filenames})
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Sourcing from Files</h2>
+                        <pre class="python"><code>
+# Initialize `iterator` with validation data.
+validation_filenames = ["/var/data/validation1.tfrecord", ...]
+sess.run(iterator.initializer, \
+        feed_dict={filenames: validation_filenames})
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Applying Transformations</h2>
+                        <p>In the previous example we made use of dataset.map(), which produces a new dataset by applying a function to each element of the input dataset.</p>
+                        
+                    </section>
+
+                    <section>
+                        <h2>Applying Transformations</h2>
+                        <p>Common tasks to perform with dataset.map():</p>
+                        <ul>
+                            <li class="fragment">Load  data from disk, resize it</li>
+                            <li class="fragment">Scale and shift inputs</li>
+                            <li class="fragment">Data augmentation and misc. preprocessing</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Map Example: Decoding and Resizing Images</h2>
+                        <pre class="python"><code>
+# Reads an image from a file, decodes it into a dense tensor, and
+# resizes it to a fixed shape.
+def _parse_function(filename, label):
+  image_string = tf.read_file(filename)
+  image_decoded = tf.image.decode_image(image_string)
+  image_resized = tf.image.resize_images(image_decoded, [28, 28])
+  return image_resized, label
+
+# A vector of filenames.
+filenames = tf.constant(["/var/data/image1.jpg", ...])
+# `labels[i]` is the label for the image in `filenames[i].
+labels = tf.constant([0, 37, ...])
+
+dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))
+dataset = dataset.map(_parse_function)
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h3>Batching and Shuffling</h3>
+                        <p>The dataset.batch(batch_size) function, in its simplest form, puts n consecutive elements of a dataset into a single element. <span class="fragment">Before batching, you can shuffle the elements to create random batches.</span></p>
+                        <pre class="python"><code>
+#Randomly arranges the element of the dataset
+dataset = dataset.shuffle(buffer_size=10000)
+#Now the batch groups will be random sets of dataset elements
+dataset = dataset.batch(32)
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Iterating through Dataset</h2>
+                        <p>tf.data.Iterators allow you to progress through elements in a Dataset, using them for training or testing. The following iterators are supported.</p>
+                        <ul>
+                            <li class="fragment">one-shot: Progress through a static dataset once</li>
+                            <li class="fragment">initializable: Progress through parameterized dataset</li>
+                            <li class="fragment">reinitializable: Can iterate through multiple datasets, starting at beginning</li>
+                            <li class="fragment">feedable: Full switching between datasets</li>
+                        </ul>
+                        <aside class="notes">A one shot iterator just goes element by element through the dataset. An initializable iterator allows you to parameterize the dataset, meaning you can leave some aspect of the dataset as a placeholder, to be determined at runtime. Reinitializable iterators allow you to do this across multiple datasets, however they start at the beginning of the dataset each time you switch. Feedable iterators don't restart.
+                        </aside>
+                    </section>
+
+                    <section>
+                        <h2>Feedable Iterating</h2>
+                        <pre class="python"><code>
+# Define training and validation datasets with the same structure.
+training_dataset = tf.data.Dataset.range(100).map(
+    lambda x: x + tf.random_uniform([], -10, 10, tf.int64)).repeat()
+validation_dataset = tf.data.Dataset.range(50)
+
+# A feedable iterator is defined by a handle placeholder and its
+# structure. We could use the `output_types` and `output_shapes`
+# properties of either `training_dataset` or `validation_dataset` here,
+# because they have identical structure.
+handle = tf.placeholder(tf.string, shape=[])
+iterator = tf.data.Iterator.from_string_handle(handle, \
+    training_dataset.output_types, training_dataset.output_shapes)
+next_element = iterator.get_next()
+                        </code></pre>
+                        <aside class="notes">For creating a feedable iterator that allows us to switch easily between datasets, we first need datasets. Then we specify a handle placeholder that will allow access to whichever dataset we want. The iterator is created from this handle and information about the datasets.</aside>
+                    </section>
+
+                    <section>
+                        <h2>Feedable Iterating</h2>
+                        <pre class="python"><code>
+# You can use feedable iterators with a variety of different kinds
+# of iterator (such as one-shot and initializable iterators).
+training_iterator = training_dataset.make_one_shot_iterator()
+validation_iterator = validation_dataset.make_initializable_iterator()
+
+# The `Iterator.string_handle()` method returns a tensor that can be
+# evaluated and used to feed the `handle` placeholder.
+training_handle = sess.run(training_iterator.string_handle())
+validation_handle = sess.run(validation_iterator.string_handle())
+                        </code></pre>
+
+                        <aside class="notes">In order to switch between datasets, create an individual iterator for the dataset. We can then grab their handles to feed to our main iterator.</aside>
+                    </section>
+
+                    <section>
+                        <h2>Feedable Iterating</h2>
+                        <pre class="python"><code>
+# Loop forever, alternating between training and validation.
+while True:
+  # Run 200 steps using the training dataset. Note that the training
+  # dataset is infinite and we resume from where we left off in the
+  # previous `while` loop iteration.
+  for _ in range(200):
+    sess.run(next_element, feed_dict={handle: training_handle})
+
+  # Run one pass over the validation dataset.
+  sess.run(validation_iterator.initializer)
+  for _ in range(50):
+    sess.run(next_element, feed_dict={handle: validation_handle})
+                        </code></pre>
+                        <aside class="notes">Now all we need to do is specify which handle to use to access the separate datasets. Note that the advantage here is that we don't need to change the "next element" operation.</aside>
+                    </section>
+
+                    <section>
+                        <h2>Sample Ingestion Pipeline</h2>
+                        <p>See <a href="https://kratzert.github.io/2017/06/15/example-of-tensorflows-new-input-pipeline.html">this link</a> for a good example of a complete ingestion pipeline.</p>
+                    </section>
+
+                    <section>
+                        <h2>Deprecated Queues</h2>
+                        <p>If you are using an old version of Tensorflow, i.e 1.1 or before, you can have a look at input queues as another method of data ingestion.</p>
+                    </section>
+
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Overview</h2>
+                        <ul style="color:#d3d3d3">
+                            <li>Tensorflow Overview</li>
+                            <li>Data Ingestion</li>
+                            <li style="color:#333">Network Creation</li>
+                            <li>Training, Testing, Troubleshooting</li>
+                            <li>CNNs</li>
+                            <li>RNNs</li>
+                            <li>List of Resources</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Network Construction</h2>
+                        <img src="images/neural_net_rest_of_layers.jpeg" />
+                    </section>
+
+                    <section>
+                        <h2>Network Construction Overview</h2>
+                        <p>Constructing a network essentially means constructing the layers and linking them together. <span class="fragment">Layers are essentially trainable parameters coupled with tensorflow operations.</span></p>
+                    </section>
+
+                    <section>
+                        <h2>Creating Layers</h2>
+                        <p>There is both a high and low level API for creating layers. <span class="fragment">The high level API uses tf.layers and Estimators, and the low level API uses tf operations and tf.nn functions.</span></p>
+                    </section>
+
+                    <section>
+                        <h2>tf.layers</h2>
+                        <p>tf.layers provides an implementation for various layer types including (but not limited to):</p>
+                        <ul>
+                            <li>Dense Layers</li>
+                            <li>Convolutional Layers</li>
+                            <li>Pooling Layers</li>
+                            <li>Normalizing Layers</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>tf.layers Arguments</h2>
+                        <p>Here are some arguments common to various layers in tf.layers.</p>
+                        <ul>
+                            <li class="fragment">activation: The activation function to use</li>
+                            <li class="fragment">use_bias: Specifies whether or not a bias is added</li>
+                            <li class="fragment">kernel_initializer: Specifies how the weights are initialized</li>
+                            <li class="fragment">kernel_regularizer: Regularizer function for the weights</li>
+                            <li class="fragment">name: The name of the layer</li>
+                            <li class="fragment">trainable: Specifies whether backprop will update the weights</li>
+                            <li class="fragment">reuse: Allows you to reuse the weights of a previous layer with the same name</li>
+                            <li class="fragment">Various other regularizers</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Example Layers</h2>
+                        <pre class="python"><code>
+xavier_initializer = tf.contrib.layers.xavier_initializer()
+#Assume the input can be had from a dataset or feed_dict
+dense_1 = tf.layers.dense(inputs=input, units=1024, \
+        activation=tf.nn.relu, kernel_initializer=xavier_initializer)
+dense_2 = tf.layers.dense(inputs=dense_1, units=1024, \
+        activation=tf.nn.sigmoid)
+#Etc
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Estimators</h2>
+                        <p>Estimators are a part of the "high-level" API, along with tf.layers. <span class="fragment">They offer a way to portably define models such that much of network construction and training is handled for you.</span></p>
+                    </section>
+
+                    <section>
+                        <h2>Estimators</h2>
+                        <img src="images/estimator-apis.png" />
+                        <aside class="notes">The model function defines the network, i.e is the collection of tf.layers. This can be custom defined or defined by someone else. There are some extra bits that are added to the layers in this function that help with training, prediction, evaluation, etc, that we'll get to later.</aside>
+                    </section>
+
+                    <section>
+                        <h2>Estimator Reference</h2>
+                        <p>An in depth discussion of the Estimator API can be found <a href="https://www.tensorflow.org/get_started/custom_estimators">here.</a></p>
+                        <aside class="notes">Because of the sheer number of things that you can do to create an Estimator, I'll only be covering some simple approaches to using them.</aside>
+                    </section>
+
+                    <section>
+                        <h2>Example with tf.layers and Estimator</h2>
+                        <p>The layer calls go into the model_fn with some other code we'll discuss later.</p>
+                        <pre class="python"><code>
+#Features are inputs, labels are targets, 
+#mode is whether we're training, predicting, etc
+def model_fn(features, labels, mode):
+    #-1 Dynamically computes batch size
+    #These are the dimensions for MNIST images
+    input_layer = tf.reshape(features["x"], [-1, 28, 28, 1])
+    conv1 = tf.layers.conv2d(inputs=input_layer,
+                        filters=32,
+                        kernel_size=[5,5],
+                        padding="same",
+                        activation=tf.nn.relu)
+    #Etc ...
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Low Level API</h2>
+                        <p>The other way to create layers is to use a combination of tf.nn functions with basic operations, e.g matmul and add. You define your own variables in this method. <span class="fragment">This may be more appropriate if you are researching new layer types and configurations.</span></p>
+                    </section>
+
+                    <section>
+                        <h2>Using tf.nn</h2>
+                        <p>The tf.nn module contains a number of functions for creating specialized layers. <span class="fragments">They are the functions that tf.layers uses behind the scenes.</span></p>
+                    </section>
+
+                    <section>
+                        <h2>Example</h2>
+                    <pre class="python"><code>
+input = tf.Variable(tf.random_normal([1,2,2,1]))
+filter = tf.Variable(tf.random_normal([1,1,1,1]))
+
+op = tf.nn.conv2d(input, filter, strides=[1, 1, 1, 1], padding='SAME')
+                    </code></pre>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Overview</h2>
+                        <ul style="color:#d3d3d3">
+                            <li>Tensorflow Overview</li>
+                            <li>Data Ingestion</li>
+                            <li>Network Creation</li>
+                            <li style="color:#333">Training, Testing, Troubleshooting</li>
+                            <li>CNNs</li>
+                            <li>RNNs</li>
+                            <li>List of Resources</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Estimators</h2>
+                        <p>In this section I'll show how to use the high level API for training, testing, and troubleshooting. <span class="fragment">The low level API may be more suitable for experimenting with new types of deep models.</span></p>
+                    </section>
+
+                    <section>
+                        <h2>Defining Training Operations</h2>
+                        <p>The layers in an estimator specify the network structure. In order to train, we must add the following components to the model function:</p>
+                        <ul>
+                            <li>A loss function</li>
+                            <li>An optimizer</li>
+                            <li>A training operation</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Defining a Loss</h2>
+                        <p>The loss function is obviously task specific. <span class="fragment">Tensorflow offers a number of built in loss functions for common tasks, with some listed <a href="https://www.tensorflow.org/api_docs/python/tf/losses">here.</a></span></p>
+                    </section>
+
+                    <section>
+                        <h2>Classification Losses</h2>
+                        <p>Below are some common classification losses in Tensorflow. Regularizing terms can be added.</p>
+                        <pre class="python"><code>
+#Softmax_cross_entropy is one of the only losses to 
+#build the activation function into the loss
+#Logits are the unactivated outputs of the last layer of
+#the network
+onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), \
+    depth=num_classes)
+cross_entropy = tf.losses.softmax_cross_entropy(
+    onehot_labels=onehot_labels, logits=logits)
+
+hinge_loss = tf.losses.hinge_loss(labels, logits)
+
+log_loss = tf.losses.log_loss(labels, predictions)
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Regression Losses</h2>
+                        <pre class="python"><code>
+#MSE
+mse = tf.losses.mean_squared_error(labels, predictions)
+
+#Cosine similarity
+cos = tf.losses.cosine_distance(labels, predictions, axis)
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Creating an Optimizer</h2>
+                        <p>The optimizer will decide how to update the weights of the network given a loss. <span class="fragment">The optimizer is only needed during the training phase.</span></p>
+                        <pre class="python"><code>
+if mode == tf.estimator.ModeKeys.TRAIN:
+    optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>List of Optimizers</h2>
+                        <p>A list of Tensorflow optimizers can be found <a href="https://www.tensorflow.org/api_guides/python/train#Optimizers">here.</a> <span class="fragment">For many problems, adaptive algorithms like Adam or RMSProp will likely be the easiest to use.</span></p>
+                    </section>
+
+                    <section>
+                        <h2>Training Loop</h2>
+                        <p>We now have everything we need to start training for some desired amount of time. A typical Estimator based training setup consists of the following:</p>
+                        <ul>
+                            <li class="fragment">Writing an input function</li>
+                            <li class="fragment">Writing a model function</li>
+                            <li class="fragment">Creating the Estimator</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Input Function</h2>
+                        <p>An input function is a function that simply returns the get_next() method of an iterator.</p>
+                        <pre class="python"><code>
+#Will return the get_next() method, that when called
+#yields a batch of training examples
+def train_input_fn(features, labels, batch_size):
+    """An input function for training"""
+    # Convert the inputs to a Dataset.
+    dataset = tf.data.Dataset.from_tensor_slices((dict(features),\
+                labels))
+
+    # Shuffle, repeat, and batch the examples.
+    dataset = dataset.shuffle(1000).repeat().batch(batch_size)
+
+    # Return the read end of the pipeline.
+    return dataset.make_one_shot_iterator().get_next()
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Model Function</h2>
+                        <p>We have discussed the model function, which contains the meat of the deep model. <span class="fragment">For training, we also define the loss, optimizer, and training operation.</span></p>
+                        <pre class="python"><code>
+def model_fn(features, labels, mode):
+    #Define input layer
+    #Define hidden layers
+    #Define output layers
+    #Define loss
+    if mode == tf.estimator.ModeKeys.TRAIN:
+        #Define optimizer
+        train_op = optimizer.minimize(
+            loss=loss,
+            global_step=tf.train.get_global_step())
+        return tf.estimator.EstimatorSpec(mode=mode, \
+                loss=loss, train_op=train_op)
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Creating the Estimator</h2>
+                        <pre class="python"><code>
+#model_dir simply refers to where the model will be saved
+classifier = tf.estimator.Estimator(
+                model_fn = custom_model_fn,
+                model_dir="/tmp/custom_estimator")
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Execute Training</h2>
+                        <pre class="python"><code>
+#The input function must be passed by its function handle
+classifier.train(input_fn=lambda: train_input_fn(features, labels, \
+        batch_size), num_training_steps)
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Logging During Training</h2>
+                        <pre class="python"><code>
+#Expects a dictionary in the model_fn naming operations 
+#e.g Expects a "probabilities" operation that will appear
+#as "softmax_tensor" in the log
+#every_n_iter simply specifies the how frequently to 
+#log the information.
+tensors_to_log = {"probabilities": "softmax_tensor"}
+logging_hook = tf.train.LoggingTensorHook(
+  tensors=tensors_to_log, every_n_iter=50)
+
+#Add the hooks when calling the train function
+classifier.train(..., hooks=[logging_hook])
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Saving a Trained Model</h2>
+                        <p>By default, an Estimator saves a checkpoint to the specified "model_dir" every 10 minutes. <span class="fragment">If you are interested in changing from the default have a look <a href="https://www.tensorflow.org/get_started/checkpoints#checkpointing_frequency">here.</a></span></p>
+                    </section>
+
+                    <section>
+                        <h2>Testing a Trained Model</h2>
+                        <p>Testing an estimator can be accomplished by passing tf.estimator.ModeKeys.EVAL to the model_fn (or more simply by calling classifier.evaluate(input_fn=eval_input_fn)). <span class="fragment">In the model function, we simply define some evaluation metric operations.</span></p>
+                        <pre class="python"><code>
+#This will only run when the model is being evaluated
+if mode == tf.estimator.ModeKeys.EVAL:
+    #Here we will use the same predictions we defined earlier
+    #for validation
+    eval_metric_ops = {
+        "accuracy" : tf.metrics.accuracy(
+            labels=labels, predictions=predictions["classes"])
+    }
+    return tf.estimator.EstimatorSpec(
+        mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Running TensorBoard</h2>
+                        <p>TensorBoard allows you to monitor various aspects of training in a graphical environment that you load in your web browser. <span class="fragment">To run TensorBoard and monitor training, simply run tensorboard --logdir=PATH, then load http://localhost:6006 in your browser.</span></p>
+                    </section>
+                    
+                    <section>
+                        <h2>TensorBoard</h2>
+                        <img src="images/mnist_tensorboard.png" />
+                    </section>
+
+                    <section>
+                        <h2>What is in TensorBoard?</h2>
+                        <p>Pre-made estimators will automatically log a lot of variables. However, when writing custom Estimators, you must specify anything you want to monitor via a log hook.</p>
+                    </section>
+
+                    <section>
+                        <h2>Tensorflow Debugger</h2>
+                        <p>A Tensorflow debugger exists that allows you to view the states of a tf graph during training and inference. <span class="fragment">More information can be found <a href="https://www.tensorflow.org/programmers_guide/debugger">here.</a></span></p>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Overview</h2>
+                        <ul style="color:#d3d3d3">
+                            <li>Tensorflow Overview</li>
+                            <li>Data Ingestion</li>
+                            <li>Network Creation</li>
+                            <li>Training, Testing, Troubleshooting</li>
+                            <li style="color:#333">CNNs</li>
+                            <li>RNNs</li>
+                            <li>List of Resources</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>CNN Recap</h2>
+                        <p>Convolutional layers compute feature maps via the following equation $$C(r,c) = I*W(r,c) = \sum_{i=1}^{K} \sum_{j=1}^{K} I(r+i-1,c+j-1)W(i,j)$$ where C(r,c) is a feature map, I is an image, W is a matrix filter, and (r,c) refers to a pixel location in the image I.</p>
+                    </section>
+
+                    <section>
+                        <iframe src="https://cs231n.github.io/assets/conv-demo/index.html" width="100%" height="700px;" style="border:none;"></iframe>
+                        <p><small>Animation courtesy of <a href="https://cs231n.github.io/assets/conv-demo/index.html">here</a></small></p>
+                        <aside class="notes">Here we can see the filter being performed across windows of the image. These are aggregated into feature maps, which represent various features automatically extracted from the image. One reason CNNs are so successful is that these filters are learned and tuned for the task at hand, which corresponds to learning good features for the problem.</aside>
+                    </section>
+
+                    <section>
+                        <h2>CNN Estimator</h2>
+                        <p>In order to define a custom CNN Estimator, we simply need to define our own model function with convolutional layers.</p>
+                    </section>
+
+                    <section>
+                        <h2>Anatomy of a tf.layer CNN Layer</h2>
+                        <p>Let's take a look at the arguments to a conv2d layer.</p>
+                        <pre class="python"><code>
+#The appropriately shaped inputs, e.g an image
+inputs = input_layer
+#Defines the number of filters, will affect the depth of the output
+num_filters = 32
+#Defines the receptive field size of each filter
+kernel_size = [5,5] 
+#Padding will affect how the kernel handles edge cases
+padding_type="same"
+#The activation function defines the nonlinear transform to be
+#applied to the outputs of a layer
+activation_function = tf.nn.relu
+
+conv1 = tf.layers.conv2d(inputs=input_layer,
+            filters=num_filters, kernel_size=kernel_size,
+            padding=padding_type, activation=activation_function)
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Same vs Valid Padding in TF</h2>
+                        <img src="images/same_vs_valid.png" />
+                        <p><small>Image courtesy of <a href="http://stackoverflow.com/questions/37674306/what-is-the-difference-between-same-and-valid-padding-in-tf-nn-max-pool-of-t">here</a></small></p>
+                    </section>
+
+                    <section>
+                        <h2>Handy Image Processing Functions</h2>
+                        <ul>
+                            <li>tf.image.decode_image() : For converting filenames to image tensors</li>
+                            <li>tf.image.resize_images() : Resizing image tensors</li>
+                            <li>tf.keras.initializers.he_normal() : Initialization of choice for CNN layers</li>
+                        </ul>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Overview</h2>
+                        <ul style="color:#d3d3d3">
+                            <li>Tensorflow Overview</li>
+                            <li>Data Ingestion</li>
+                            <li>Network Creation</li>
+                            <li>Training, Testing, Troubleshooting</li>
+                            <li>CNNs</li>
+                            <li style="color:#333">RNNs</li>
+                            <li>List of Resources</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>RNN Recap</h2>
+                        <p>An RNN takes input at multiple timesteps, including its own output from the previous step.</p>
+                        <div style="position:relative; height:410px; margin:0 auto;">
+                            <img src="images/LSTM3-Chain-Covered.png" style="position:absolute;top:0;left:50%;margin-left:-450px;"/>
+                            <img class="fragment" src="images/LSTM3-chain.png" style="position:absolute;top:0;left:50%;margin-left:-450px;"/>
+                        </div>
+                        <aside class="notes">Pictured is an LSTM cell "A" at various timesteps t-1, t, and t+1. It's worth noting that A is equivalent to a hidden layer from that neural network diagram pictured earlier, with one major difference. A takes its output from time t-1 as input at time t. Further, A is a combination of four different neural network layers, pictured in the yellow boxes, which interact in a unique way. At each timestep t, the LSTM receives an input X_t, along with its own output from time t-1, denoted as h_(t-1). The LSTM cell accumulates long term information via its cell state, pictured at the top of the cell. The four layers which interact in the LSTM cell decide what parts of the inputs should alter the cell state, and what should be output. These layers are also called gates. The gates control what the cell should forget, include, and output. The first layer on the left is known as a forget gate, which decides what the information the cell should throw away based on X_t and h_(t-1). The next to layers pictured form an input gate and candidate generating gate, which respectively decide which values of the input should be aggregated to the cell state and calculate those values. Finally, an output get selects which values from the cell state should be output into the next timestep.</aside>
+                    </section>
+
+                    <section>
+                        <h2>RNN Estimator</h2>
+                        <p>There is a pre-made RNN estimator, with documentation <a href="https://www.tensorflow.org/api_docs/python/tf/contrib/learn/DynamicRnnEstimator">here.</a></p>
+                    </section>
+
+                    <section>
+                        <h2>RNN Layer Types</h2>
+                        <p>Same as a CNN, to construct a custom RNN Estimator you need to construct your custom model function. Below are some layer types to use:</p>
+                        <ul>
+                            <li class="fragment">tf.contrib.rnn.basicRNNCell</li>
+                            <li class="fragment">tf.contrib.rnn.basicLSTMCell</li>
+                            <li class="fragment">tf.contrib.rnn.GRUBlockCell</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Anatomy of an LSTM Layer </h2>
+                        <p>Let's take a look at the arguments to an LSTM layer.</p>
+                        <pre class="python"><code>
+#The appropriately shaped inputs, e.g a sequence of words
+inputs = tf.placheolder(tf.float32, \
+        [time_steps, batch_size, num_features])
+#Defines the number of units in the hidden state
+num_units = 512
+#Initial state of the LSTM
+hidden_state = tf.zeros([batch_size, lstm.state_size])
+current_state = tf.zeros([batch_size, lstm.state_size])
+state = hidden_state, current_state
+
+lstm = tf.contrib.rnn.BasicLSTMCell(lstm_size)
+
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>RNN Layer Types</h2>
+                        <pre class="python"><code>
+
+#Pseudo-code, this should be changed for real ingestion
+for batch_of_words in dataset:
+    output, state = lstm(batch_of_words, state)
+
+    logits = tf.add(tf.matmul(output, decode_W), decode_b)
+    probability = tf.nn.softmax(logits)
+    #For backprop through time, keep an aggregate loss
+    loss += loss_function(probabilities, target_words)
+    l.append(probability)
+
+                        </code></pre>
+                    </section>
+
+
+                    <section>
+                        <h2>Unrolled RNNs</h2>
+                        <p>If you wish to construct an unrolled RNN, e.g represent the RNN as a feedforward network with multiple layers of shared weights, you will need lower level API calls coupled with a for loop.</p>
+                    </section>
+
+                    <section>
+                        <h2>Unrolled RNN Implementation</h2>
+                        <pre class="python"><code>
+#Example unrolled LSTM Construction (for classification)
+for i in range(sequence_length):
+    #Compute embeddings
+    if i == 0:
+        input_embedding = tf.zeros([batch_size, dim_embed])
+    else:
+        input_embedding = tf.nn.embedding_lookup(\
+            embedding_weights, prediction)
+
+    affine = tf.add(tf.matmul(input_embedding, lstm_W), lstm_b)
+                        </code></pre>
+                    </section>
+    
+                    <section>
+                        <h2>Unrolled RNN Implementation</h2>
+                        <pre class="python"><code>
+    i, f, o, g = tf.split(affine, 4, 1)
+    i = tf.nn.sigmoid(i)
+    f = tf.nn.sigmoid(f)
+    o = tf.nn.sigmoid(o)
+    g = tf.nn.tanh(g)
+
+    c = f * c + i * g
+    h = o * tf.nn.tanh(c)
+
+    logits = tf.add(tf.matmul(h, decode_W), decode_b)
+    probabilities = tf.nn.softmax(logits)
+    prediction = tf.argmax(word_prob, 1)
+    #Save for later
+    l.append(probabilities)
+                        </code></pre>
+                    </section>
+
+                    <section>
+                        <h2>Handy Sequence Processing Functions</h2>
+                        <ul>
+                            <li>Dataset.padded_batch() : Pads sequences to make them uniform length</li>
+                            <li>tf.nn.dynamic_rnn() : Dynamic length RNN</li>
+                            <li>tf.nn.embedding_lookup : Searches for a word embedding given an index</li>
+                        </ul>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Overview</h2>
+                        <ul style="color:#d3d3d3">
+                            <li>Tensorflow Overview</li>
+                            <li>Data Ingestion</li>
+                            <li>Network Creation</li>
+                            <li>Training, Testing, Troubleshooting</li>
+                            <li>CNNs</li>
+                            <li>RNNs</li>
+                            <li style="color:#333">List of Resources</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>General Tutorials</h2>
+                        <ul>
+                            <li><a href="https://www.tensorflow.org/tutorials/layers">Basic Image Recognition</a></li>
+                            <li><a href="https://www.tensorflow.org/tutorials/deep_cnn">More Complex Image Recognition</a></li>
+                            <li><a href="http://www.wildml.com/2016/08/rnns-in-tensorflow-a-practical-guide-and-undocumented-features/">Lower Level Help for Sequences</a></li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>API Documentation</h2>
+                        <ul>
+                            <li><a href="https://www.tensorflow.org/api_docs/">API Docs</a></li>
+                            <li><a href="https://www.tensorflow.org/programmers_guide/">Programmer's Guide</a></li>
+                            <li><a href="https://www.tensorflow.org/performance/">Performance Guide</a></li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Data Ingestion Help</h2>
+                        <ul>
+                            <li><a href="https://kratzert.github.io/2017/06/15/example-of-tensorflows-new-input-pipeline.html">tf.Dataset Example</a></li>
+                            <li><a href="https://kratzert.github.io/2017/09/11/speeding-up-tensorflows-input-pipeline.html">Above Example Continued</a></li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Pre-trained Models</h2>
+                        <p>A collection of popular models for a variety of tasks can be found <a href="https://github.com/tensorflow/models">here.</a></p>
+                    </section>
+                </section>
+
+                <section>
+                    <h2>Questions?</h2>
+                </section>
+            <!-- Slides div -->
+            </div>
+        <!-- Reveal div -->
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+                slideNumber: 'c/t',
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
